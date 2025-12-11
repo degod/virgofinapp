@@ -15,7 +15,7 @@ namespace App\Http\Controllers;
  * 
  * @OA\Server(
  *     url="http://localhost:9030",
- *     description="Version 1 of the VirgoFin App API"
+ *     description="The VirgoFin App API"
  * )
  * 
  * @OA\SecurityScheme(

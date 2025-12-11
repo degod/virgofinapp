@@ -18,7 +18,7 @@ class LoginController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/v1/auth/login",
+     *     path="/api/auth/login",
      *     summary="Authenticate user and return access token",
      *     tags={"Authentication"},
      *
