@@ -1,0 +1,130 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: virgofin-app
+    container_name: virgofin-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - virgofin-network
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=virgofin
+      - DB_USERNAME=virgofin
+      - DB_PASSWORD=secret
+    command: php-fpm
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: virgofin-nginx
+    restart: unless-stopped
+    platform: linux/amd64
+    ports:
+      - "9030:80"
+    volumes:
+      - ./:/var/www/html:cached
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - virgofin-network
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.0
+    container_name: virgofin-mysql
+    restart: unless-stopped
+    platform: linux/amd64
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: virgofin
+      MYSQL_USER: virgofin
+      MYSQL_PASSWORD: secret
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 15s
+    networks:
+      - virgofin-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: virgofin-phpmyadmin
+    restart: unless-stopped
+    platform: linux/amd64
+    environment:
+      PMA_HOST: db
+      PMA_USER: virgofin
+      PMA_PASSWORD: secret
+    ports:
+      - "9031:80"
+    networks:
+      - virgofin-network
+    depends_on:
+      - db
+
+  # ==========================================
+  # Soketi (Self-hosted Pusher Server)
+  # ==========================================
+  soketi:
+    image: quay.io/soketi/soketi:1.0-16-alpine
+    container_name: virgofin-soketi
+    restart: unless-stopped
+    ports:
+      - "6001:6001"
+    environment:
+      SOKETI_DEFAULT_APP_ID: virgofin
+      SOKETI_DEFAULT_APP_KEY: virgofin-key
+      SOKETI_DEFAULT_APP_SECRET: virgofin-secret
+      SOKETI_SERVER_DEFAULT_MAX_REQUEST_SIZE: 10240
+      SOKETI_METRICS_ENABLED: "true"
+    networks:
+      - virgofin-network
+
+  vite:
+    image: node:20-alpine
+    container_name: virgofin-vite
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    ports:
+      - "5173:5173"
+    command: sh -c "npm set audit false && npm set fund false && npm install && npm run dev -- --host 0.0.0.0"
+    profiles: ["dev"]
+
+  assets:
+    image: node:20-alpine
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    command: sh -c "npm set audit false && npm set fund false && npm install && npm run build"
+    profiles: ["build"]
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: virgofin-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - virgofin-network
+
+networks:
+  virgofin-network:
+    driver: bridge
+
+volumes:
+  db_data:
