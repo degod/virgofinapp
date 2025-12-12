@@ -12,20 +12,20 @@
     "servers": [
         {
             "url": "http://localhost:9030",
-            "description": "Version 1 of the VirgoFin App API"
+            "description": "The VirgoFin App API"
         },
         {
             "url": "http://localhost:9030/"
         }
     ],
     "paths": {
-        "/api/v1/auth/login": {
+        "/api/auth/login": {
             "post": {
                 "tags": [
                     "Authentication"
                 ],
                 "summary": "Authenticate user and return access token",
-                "operationId": "d00f4d12443a970455f396756440af3f",
+                "operationId": "b6656e14ab98062f4e8645f52ccd11fc",
                 "requestBody": {
                     "description": "Login credentials",
                     "required": true,
@@ -108,6 +108,74 @@
                     }
                 }
             }
+        },
+        "/api/profile": {
+            "get": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Get authenticated user's balance and assets",
+                "operationId": "ebf2d6691f8156a75695e0990f7f531a",
+                "responses": {
+                    "200": {
+                        "description": "User profile with USD balance and assets",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Profile retrieved successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "balance": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 1000.5
+                                                },
+                                                "assets": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "symbol": {
+                                                                "type": "string",
+                                                                "example": "BTC"
+                                                            },
+                                                            "amount": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 0.5
+                                                            },
+                                                            "locked_amount": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 0.1
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -124,6 +192,10 @@
         {
             "name": "Authentication",
             "description": "Authentication"
+        },
+        {
+            "name": "Profile",
+            "description": "Profile"
         }
     ]
 }
