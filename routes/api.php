@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Order\CancelOrderController;
 use App\Http\Controllers\Order\CreateOrderController;
 use App\Http\Controllers\User\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -12,4 +13,5 @@ Route::prefix('auth')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', ProfileController::class)->name('user.profile');
     Route::post('/orders', CreateOrderController::class)->name('orders.create');
+    Route::post('/orders/{id}', CancelOrderController::class)->name('orders.cancel');
 });

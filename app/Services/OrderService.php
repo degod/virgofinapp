@@ -18,10 +18,6 @@ class OrderService
         private AssetRepositoryInterface $assetRepository
     ) {}
 
-    /**
-     * Create a new limit order with balance/asset checks and locking.
-     * Everything runs in a transaction for atomicity.
-     */
     public function createOrder(User $user, array $data): Order
     {
         $symbol = $data['symbol'];
@@ -76,5 +72,53 @@ class OrderService
                 'status' => OrderStatusEnum::OPEN,
             ]);
         });
+    }
+
+    public function cancelOrder(Order $order): void
+    {
+        if ($order->status !== OrderStatusEnum::OPEN) {
+            throw new Exception('Only open orders can be cancelled.');
+        }
+
+        if ($order->side === OrderSideEnum::BUY) {
+            // Refund locked USD
+            $refund = $order->price * $order->amount;
+            $user = $order->user;
+            $user->balance += $refund;
+            $user->save();
+        } else {
+            // SELL → refund locked asset
+            $asset = $this->assetRepository->findByUserAndSymbol($order->user_id, $order->symbol);
+
+            if ($asset) {
+                $asset->locked_amount -= $order->amount;
+                $asset->amount += $order->amount;
+                $asset->save();
+            }
+        }
+
+        $order->status = OrderStatusEnum::CANCELLED;
+        $order->save();
+    }
+
+    public function getUserAssetState(User $user, string $symbol): array
+    {
+        $asset = $this->assetRepository->findByUserAndSymbol($user->id, $symbol);
+
+        if (! $asset) {
+            return [
+                'symbol'        => $symbol,
+                'amount'        => 0.0,
+                'locked_amount' => 0.0,
+                'total'         => 0.0,
+            ];
+        }
+
+        return [
+            'symbol'        => $asset->symbol,
+            'amount'        => (float) $asset->amount,
+            'locked_amount' => (float) $asset->locked_amount,
+            'total'         => (float) ($asset->amount + $asset->locked_amount),
+        ];
     }
 }
