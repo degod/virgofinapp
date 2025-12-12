@@ -83,8 +83,10 @@ class LoginController extends Controller
             status: 200,
             message: 'Login successful.',
             data: [
-                'access_token' => $token,
+                'token' => $token,
                 'token_type'   => 'Bearer',
+                'name' => $user->name,
+                'email' => $user->email,
             ]
         );
     }

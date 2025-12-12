@@ -41,16 +41,36 @@ class OrderMatched implements ShouldBroadcastNow
     public function broadcastWith(): array
     {
         return [
-            'message' => 'Your order has been matched!',
-            'trade' => [
-                'amount' => $this->amount,
-                'price' => $this->price,
-                'usd_volume' => $this->usdVolume,
-                'commission' => $this->commission,
-                'symbol' => $this->buyOrder->symbol,
+            // Payload for the buyer ONLY
+            'user.' . $this->buyer->id => [
+                'message' => 'Your order has been matched!',
+                'trade' => [
+                    'amount' => $this->amount,
+                    'price' => $this->price,
+                    'usd_volume' => $this->usdVolume,
+                    'commission' => $this->commission,
+                    'symbol' => $this->buyOrder->symbol,
+                    'role' => 'buyer',
+                ],
+                'wallet' => [
+                    'usd_balance' => (float) $this->buyer->balance,
+                ],
             ],
-            'wallet' => [
-                'usd_balance' => (float) $this->buyer->balance,
+
+            // Payload for the seller ONLY
+            'user.' . $this->seller->id => [
+                'message' => 'Your order has been matched!',
+                'trade' => [
+                    'amount' => $this->amount,
+                    'price' => $this->price,
+                    'usd_volume' => $this->usdVolume,
+                    'commission' => $this->commission,
+                    'symbol' => $this->buyOrder->symbol,
+                    'role' => 'seller',
+                ],
+                'wallet' => [
+                    'usd_balance' => (float) $this->seller->balance,
+                ],
             ],
         ];
     }
