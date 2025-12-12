@@ -3,6 +3,7 @@
 namespace App\Repositories\Order;
 
 use App\Models\Order;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 
 class OrderRepository implements OrderRepositoryInterface
@@ -42,5 +43,13 @@ class OrderRepository implements OrderRepositoryInterface
             ->where('status', 1) // open
             ->orderBy('created_at', 'asc')
             ->get();
+    }
+
+    public function paginateUserOrders(int $userId, int $perPage = 10): LengthAwarePaginator
+    {
+        return $this->model
+            ->where('user_id', $userId)
+            ->orderByDesc('id')
+            ->paginate($perPage);
     }
 }

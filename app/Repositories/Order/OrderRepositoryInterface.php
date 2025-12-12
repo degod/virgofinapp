@@ -3,6 +3,7 @@
 namespace App\Repositories\Order;
 
 use App\Models\Order;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 
 interface OrderRepositoryInterface
@@ -12,4 +13,5 @@ interface OrderRepositoryInterface
     public function update(Order $order, array $data): bool;
     public function getUserOrders(int $userId, ?string $symbol = null): Collection;
     public function getOpenOrdersBySymbol(string $symbol): Collection;
+    public function paginateUserOrders(int $userId, int $perPage = 10): LengthAwarePaginator;
 }

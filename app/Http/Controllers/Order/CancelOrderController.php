@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Repositories\Order\OrderRepositoryInterface;
 use App\Services\OrderService;
 use App\Services\ResponseService;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -18,7 +19,7 @@ class CancelOrderController extends Controller
     ) {}
 
     /**
-     * @OA\Delete(
+     * @OA\Post(
      *     path="/api/orders/{id}/cancel",
      *     summary="Cancel an open order",
      *     tags={"Orders"},
@@ -63,7 +64,7 @@ class CancelOrderController extends Controller
                         : ['assets' => $this->orderService->getUserAssetState($user, $order->symbol)],
                 ]
             );
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->responseService->error(400, $e->getMessage());
         }
     }
