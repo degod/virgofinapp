@@ -4,12 +4,15 @@ namespace App\Services;
 
 use App\Enums\OrderSideEnum;
 use App\Enums\OrderStatusEnum;
+use App\Events\OrderMatched;
+use App\Models\Asset;
 use App\Models\Order;
 use App\Models\User;
 use App\Repositories\Asset\AssetRepositoryInterface;
 use App\Repositories\Order\OrderRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Exception;
+use Illuminate\Support\Facades\Log;
 
 class OrderService
 {
@@ -81,13 +84,11 @@ class OrderService
         }
 
         if ($order->side === OrderSideEnum::BUY) {
-            // Refund locked USD
             $refund = $order->price * $order->amount;
             $user = $order->user;
             $user->balance += $refund;
             $user->save();
         } else {
-            // SELL → refund locked asset
             $asset = $this->assetRepository->findByUserAndSymbol($order->user_id, $order->symbol);
 
             if ($asset) {
@@ -120,5 +121,103 @@ class OrderService
             'locked_amount' => (float) $asset->locked_amount,
             'total'         => (float) ($asset->amount + $asset->locked_amount),
         ];
+    }
+
+    public function attemptMatch(Order $newOrder): void
+    {
+        if ($newOrder->status !== OrderStatusEnum::OPEN) {
+            Log::info("Order is not open for matching", ['order_id' => $newOrder->id]);
+            return;
+        }
+
+        try {
+            Log::info("Order is processing...", ['order_id' => $newOrder->id]);
+
+            DB::transaction(function () use ($newOrder) {
+                $newOrder = $newOrder->where('id', $newOrder->id)->lockForUpdate()->first();
+
+                $oppositeSide = $newOrder->side === OrderSideEnum::BUY ? OrderSideEnum::SELL : OrderSideEnum::BUY;
+
+                $query = Order::where('symbol', $newOrder->symbol)
+                    ->where('side', $oppositeSide)
+                    ->where('status', OrderStatusEnum::OPEN)
+                    ->where('amount', $newOrder->amount)
+                    ->lockForUpdate();
+
+                if ($newOrder->side === OrderSideEnum::BUY) {
+                    $query->where('price', '<=', $newOrder->price)
+                        ->orderBy('price', 'asc')
+                        ->orderBy('created_at', 'asc');
+                } else {
+                    $query->where('price', '>=', $newOrder->price)
+                        ->orderBy('price', 'desc')
+                        ->orderBy('created_at', 'asc');
+                }
+
+                $matchedOrder = $query->first();
+                if (!$matchedOrder) {
+                    Log::info("No matching order found", [
+                        'order_id' => $newOrder->id,
+                        'matched_order' => $matchedOrder,
+                    ]);
+                    return;
+                }
+
+                // Match found! Execute trade
+                $matchPrice = $matchedOrder->price;
+                $usdVolume = $newOrder->amount * $matchPrice;
+                $commission = $usdVolume * 0.015;
+                $netUsdToSeller = $usdVolume - $commission;
+
+                // Reload users and assets with locks
+                $buyer = $newOrder->side === OrderSideEnum::BUY ? $newOrder->user : $matchedOrder->user;
+                $seller = $newOrder->side === OrderSideEnum::SELL ? $newOrder->user : $matchedOrder->user;
+
+                $buyer = User::lockForUpdate()->find($buyer->id);
+                $seller = User::lockForUpdate()->find($seller->id);
+                $assetSymbol = $newOrder->symbol;
+
+                $buyerAsset = Asset::firstOrCreate(
+                    ['user_id' => $buyer->id, 'symbol' => $assetSymbol],
+                    ['amount' => 0, 'locked_amount' => 0]
+                );
+                $buyerAsset->amount += $newOrder->amount;
+                $buyerAsset->save();
+
+                $sellerAsset = Asset::lockForUpdate()
+                    ->where('user_id', $seller->id)
+                    ->where('symbol', $assetSymbol)
+                    ->firstOrFail();
+
+                $sellerAsset->locked_amount -= $newOrder->amount;
+                $sellerAsset->save();
+
+                $seller->balance += $netUsdToSeller;
+                $seller->save();
+
+                $newOrder->status = OrderStatusEnum::FILLED;
+                $newOrder->save();
+
+                $matchedOrder->status = OrderStatusEnum::FILLED;
+                $matchedOrder->save();
+
+                // Broadcast real-time event to both users via Soketi
+                broadcast(new OrderMatched(
+                    buyer: $buyer,
+                    seller: $seller,
+                    buyOrder: $newOrder->side === OrderSideEnum::BUY ? $newOrder : $matchedOrder,
+                    sellOrder: $newOrder->side === OrderSideEnum::SELL ? $newOrder : $matchedOrder,
+                    amount: $newOrder->amount,
+                    price: $matchPrice,
+                    usdVolume: $usdVolume,
+                    commission: $commission
+                ));
+            });
+        } catch (Exception $e) {
+            Log::error("Error during order matching", [
+                'order_id' => $newOrder->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

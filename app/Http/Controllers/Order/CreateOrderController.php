@@ -46,13 +46,20 @@ class CreateOrderController extends Controller
         try {
             $order = $this->orderService->createOrder($user, $data);
 
-            // TODO: Trigger matching logic here once implemented
-            // $this->orderService->attemptMatch($order);
+            $this->orderService->attemptMatch($order);
 
             $user->refresh();
             $asset = $order->side === OrderSideEnum::SELL
                 ? $this->assetRepository->findByUserAndSymbol($user->id, $order->symbol)
                 : null;
+
+            if (!$asset) {
+                $asset = (object)[
+                    'symbol' => $order->symbol,
+                    'amount' => 0.0,
+                    'locked_amount' => 0.0,
+                ];
+            }
 
             return $this->responseService->success(
                 status: 201,
