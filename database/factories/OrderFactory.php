@@ -2,11 +2,11 @@
 
 namespace Database\Factories;
 
-use App\AssetEnum;
+use App\Enums\AssetEnum;
+use App\Enums\OrderSideEnum;
+use App\Enums\OrderStatusEnum;
 use App\Models\Order;
 use App\Models\User;
-use App\OrderSideEnum;
-use App\OrderStatusEnum;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class OrderFactory extends Factory

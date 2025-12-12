@@ -12,12 +12,15 @@ class AssetRepository implements AssetRepositoryInterface
         $this->model = $model;
     }
 
-    public function findByUserAndSymbol(int $userId, string $symbol): ?Asset
+    public function findByUserAndSymbol(int $userId, string $symbol, bool $lock = false): ?Asset
     {
-        return $this->model
-            ->where('user_id', $userId)
-            ->where('symbol', $symbol)
-            ->first();
+        $query = Asset::where('user_id', $userId)->where('symbol', $symbol);
+
+        if ($lock) {
+            $query->lockForUpdate();
+        }
+
+        return $query->first();
     }
 
     public function create(array $data): Asset

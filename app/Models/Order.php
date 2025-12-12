@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\OrderStatusEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -26,16 +27,16 @@ class Order extends Model
     // Optional: scopes for convenience
     public function scopeOpen($query)
     {
-        return $query->where('status', 1);
+        return $query->where('status', OrderStatusEnum::OPEN);
     }
 
     public function scopeFilled($query)
     {
-        return $query->where('status', 2);
+        return $query->where('status', OrderStatusEnum::FILLED);
     }
 
     public function scopeCancelled($query)
     {
-        return $query->where('status', 3);
+        return $query->where('status', OrderStatusEnum::CANCELLED);
     }
 }

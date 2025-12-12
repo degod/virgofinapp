@@ -1,6 +1,6 @@
 ## INTRODUCTION
 
-Recipe Book application is a small full-stack application that allows users to manage their own recipes. It is build using Laravel for the backend APIs and VueJS for the frontend client-facing side.
+Full Stack development (Laravel API & Vue.js) with a focus on financial data integrity, concurrency safety, scalable balance/asset management, and real-time systems. It is built using Laravel for the backend APIs and VueJS for the frontend client-facing side.
 
 ## PRE-REQUISITE FOR SETUP
 
