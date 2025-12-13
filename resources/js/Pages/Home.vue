@@ -1,4 +1,5 @@
 <script setup>
+import OrdersHistory from '../Components/OrdersHistory.vue';
 import WalletOverview from '../Components/WalletOverview.vue';
 import { useAuthStore } from '../stores/auth';
 import _ from 'lodash';
@@ -14,6 +15,8 @@ const auth = useAuthStore();
       </div>
 
       <WalletOverview v-if="auth.isAuthenticated"/>
+
+      <OrdersHistory v-if="auth.isAuthenticated"/>
     </div>
   </div>
 </template>
