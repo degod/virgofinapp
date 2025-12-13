@@ -86,7 +86,13 @@ docker compose --profile build run --rm assets
 -   To run frontend assets in dev mode
 
 ```bash
-docker compose --profile dev up --build
+docker compose --profile dev up -d --build
+```
+
+-   To get into the frontend container bash
+
+```bash
+docker exec -it virgofin-vite sh
 ```
 
 -   Run automated test for the frontend using vitest

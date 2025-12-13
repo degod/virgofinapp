@@ -236,6 +236,102 @@
                 ]
             }
         },
+        "/api/orders/sides": {
+            "get": {
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Get order side options",
+                "operationId": "ed83447bcfcae9a6dc7650a58a296d13",
+                "responses": {
+                    "200": {
+                        "description": "Order side options retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Buy"
+                                                    },
+                                                    "value": {
+                                                        "type": "string",
+                                                        "example": "buy"
+                                                    },
+                                                    "selected": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/orders/symbols": {
+            "get": {
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Get tradable symbol options",
+                "operationId": "0f7f101bcd182670f3244178e146db59",
+                "responses": {
+                    "200": {
+                        "description": "Symbol options retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "BTC"
+                                                    },
+                                                    "value": {
+                                                        "type": "string",
+                                                        "example": "BTC"
+                                                    },
+                                                    "selected": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/profile": {
             "get": {
                 "tags": [

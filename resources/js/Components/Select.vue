@@ -9,13 +9,9 @@ defineProps({
         type: String,
         required: true,
     },
-    type: {
-        type: String,
-        default: "text",
-    },
-    placeholder: {
-        type: String,
-        default: "",
+    options: {
+        type: Array,
+        default: [],
     },
     is_required: {
         type: Boolean,
@@ -31,10 +27,10 @@ defineProps({
             {{ label }}
             <span v-if="is_required" class="text-red-500 ml-1">*</span>
         </label>
-        <input
-            v-model="model" :type="type" :placeholder="placeholder" :required="is_required"
-            class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-indigo-300"
-        />
+        <select v-model="model" :required="is_required" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-indigo-300">
+          <option :value="option.value" :selected="option.selected" v-for="option in options">{{ option.name}}</option>
+        </select>
+
         <small class="text-red-500" v-if="message">
             {{ message ? message[0] : "" }}
         </small>
