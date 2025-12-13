@@ -1,6 +1,7 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import api from '@/services/api';
+import echo from '@/services/echo';
 
 const orders = ref([]);
 const loading = ref(false);
@@ -12,6 +13,8 @@ const pagination = ref({
   per_page: 10,
   total: 0,
 });
+
+let channel;
 
 const fetchOrders = async (page = 1) => {
   loading.value = true;
@@ -58,7 +61,30 @@ const changePage = (page) => {
   }
 };
 
-onMounted(() => fetchOrders());
+const setupRealtime = () => {
+  if (channel) channel.unsubscribe();
+
+  const userId = window.Laravel?.user?.id;
+  if (!userId) return;
+
+  channel = echo.private(`user.${userId}`);
+
+  channel.listen('OrderMatched', (e) => {
+    const payload = e.trade ? e : Object.values(e)[0] || e;
+    if (!payload) return;
+
+    fetchOrders(pagination.value.current_page);
+  });
+};
+
+onMounted(() => {
+  fetchOrders();
+  setupRealtime();
+});
+
+onUnmounted(() => {
+  if (channel) channel.unsubscribe();
+});
 </script>
 
 <template>
