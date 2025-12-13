@@ -35,6 +35,12 @@ cd virgofinapp/
 cp .env.example .env
 ```
 
+-   Copy resources/js/env.example into resources/js/.env
+
+```bash
+cp resources/js/.env.example resources/js/.env
+```
+
 -   Build app using docker
 
 ```bash
