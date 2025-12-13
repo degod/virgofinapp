@@ -5,6 +5,7 @@ import Home from '../Pages/Home.vue';
 import Layout from '../Layouts/Layout.vue';
 import Login from '../Pages/Login.vue';
 import LimitOrder from '../Pages/LimitOrder.vue';
+import OrderBook from '../Pages/OrderBook.vue';
 
 const routes = [
   {
@@ -17,10 +18,8 @@ const routes = [
       {
         path: 'orders',
         children: [
-          { path: '', name: 'orders', component: LimitOrder, meta: { requiresAuth: true } },
-    //       { path: 'create', name: 'recipe.create', component: RecipeCreate, meta: { requiresAuth: true } },
-    //       { path: ':id', name: 'recipe.show', component: RecipeShow, props: true, meta: { requiresAuth: false } },
-    //       { path: ':id/edit', name: 'recipe.edit', component: RecipeEdit, props: true, meta: { requiresAuth: true } },
+          { path: 'create', name: 'orders', component: LimitOrder, meta: { requiresAuth: true } },
+          { path: 'book/:symbol', name: 'orderbook', component: OrderBook, props: true, meta: { requiresAuth: false } },
         ],
       },
     ],

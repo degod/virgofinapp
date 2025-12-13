@@ -58,6 +58,13 @@ const submitOrder = async () => {
 
     await api.post('/orders', formData);
     success.value = true;
+    form.value = { 
+      symbol: '',
+      side: '',
+      price: '',
+      amount: '',
+    };
+
     setTimeout(() => {
       router.push({ name: 'home' });
     }, 1500);

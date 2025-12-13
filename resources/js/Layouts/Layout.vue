@@ -26,7 +26,7 @@ function logout() {
                         <router-link to="/login" class="hover:underline">Login</router-link>
                     </template>
                     <template v-else>
-                        <router-link to="/orders" class="hover:underline">Place Order</router-link>
+                        <router-link :to="{ name: 'orders' }" class="hover:underline">Place Order</router-link>
                         <button @click="logout" class="hover:underline">Logout</button>
                     </template>
                 </div>

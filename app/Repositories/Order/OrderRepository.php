@@ -45,10 +45,32 @@ class OrderRepository implements OrderRepositoryInterface
             ->get();
     }
 
-    public function paginateUserOrders(int $userId, int $perPage = 10): LengthAwarePaginator
-    {
+    public function paginateUserOrders(
+        int $userId,
+        array $filters = [],
+        int $perPage = 10
+    ): LengthAwarePaginator {
         return $this->model
-            ->where('user_id', $userId)
+            ->when(
+                isset($filters['orderbook']) && $filters['orderbook'],
+                fn($query) => $query->where('user_id', '!=', $userId),
+                fn($query) => $query->where('user_id', $userId)
+            )
+            ->when(
+                isset($filters['symbol']),
+                fn($query) =>
+                $query->where('symbol', $filters['symbol'])
+            )
+            ->when(
+                isset($filters['status']),
+                fn($query) =>
+                $query->where('status', $filters['status'])
+            )
+            ->when(
+                isset($filters['side']),
+                fn($query) =>
+                $query->where('side', $filters['side'])
+            )
             ->orderByDesc('id')
             ->paginate($perPage);
     }

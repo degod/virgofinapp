@@ -18,7 +18,7 @@ class ListOrdersController extends Controller
     /**
      * @OA\Get(
      *     path="/api/orders",
-     *     summary="List authenticated user's orders",
+     *     summary="List authenticated user's orders with optional filters",
      *     tags={"Orders"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
@@ -35,6 +35,34 @@ class ListOrdersController extends Controller
      *         description="Items per page",
      *         @OA\Schema(type="integer", example=10)
      *     ),
+     *     @OA\Parameter(
+     *         name="orderbook",
+     *         in="query",
+     *         required=false,
+     *         description="Fetch orders for order book (true/false)",
+     *         @OA\Schema(type="string", example="true")
+     *     ),
+     *     @OA\Parameter(
+     *         name="symbol",
+     *         in="query",
+     *         required=false,
+     *         description="Filter orders by asset symbol",
+     *         @OA\Schema(type="string", example="BTC")
+     *     ),
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         required=false,
+     *         description="Filter orders by status (open, filled, cancelled)",
+     *         @OA\Schema(type="string", example="open")
+     *     ),
+     *     @OA\Parameter(
+     *         name="side",
+     *         in="query",
+     *         required=false,
+     *         description="Filter orders by side (buy/sell)",
+     *         @OA\Schema(type="string", example="buy")
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Orders retrieved successfully"
@@ -44,9 +72,11 @@ class ListOrdersController extends Controller
     public function __invoke(Request $request): JsonResponse
     {
         $user = $request->user();
+        $filters = $request->only(['symbol', 'status', 'side', 'orderbook']);
 
         $orders = $this->orderRepository->paginateUserOrders(
             userId: $user->id,
+            filters: $filters,
             perPage: $request->integer('per_page', 10)
         );
 

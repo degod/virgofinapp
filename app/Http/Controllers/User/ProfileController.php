@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\User;
 
+use App\Enums\AssetEnum;
 use App\Http\Controllers\Controller;
 use App\Repositories\Asset\AssetRepositoryInterface;
 use App\Services\ResponseService;
@@ -48,21 +49,26 @@ class ProfileController extends Controller
     public function __invoke(Request $request): JsonResponse
     {
         $user = $request->user();
+        $supportedSymbols = AssetEnum::symbols();
+        $userAssets = $this->assetRepository->getUserAssets($user->id)->keyBy('symbol');
 
-        $assets = $this->assetRepository->getUserAssets($user->id)
-            ->map(fn($asset) => [
-                'symbol' => $asset->symbol,
-                'amount' => (float) $asset->amount,
-                'locked_amount' => (float) $asset->locked_amount,
-            ])
-            ->toArray();
+        $assets = collect($supportedSymbols)->map(function (string $symbol) use ($userAssets) {
+            $asset = $userAssets->get($symbol);
+
+            return [
+                'symbol'        => $symbol,
+                'amount'        => $asset ? (float) $asset->amount : 0.0,
+                'locked_amount' => $asset ? (float) $asset->locked_amount : 0.0,
+                'total'         => $asset ? (float) ($asset->amount + $asset->locked_amount) : 0.0,
+            ];
+        })->values()->toArray();
 
         return $this->responseService->success(
-            200,
-            'Profile retrieved successfully',
-            [
+            status: 200,
+            message: 'Profile retrieved successfully',
+            data: [
                 'balance' => (float) $user->balance,
-                'assets' => $assets,
+                'assets'  => $assets,
             ]
         );
     }
