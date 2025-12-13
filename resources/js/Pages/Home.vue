@@ -1,4 +1,5 @@
 <script setup>
+import WalletOverview from '../Components/WalletOverview.vue';
 import { useAuthStore } from '../stores/auth';
 import _ from 'lodash';
 
@@ -11,6 +12,8 @@ const auth = useAuthStore();
       <div v-if="auth">
         <h1 class="text-2xl font-bold mb-5">Welcome, {{ (auth.user && auth.user.name) ? auth.user.name: "Guest" }}!</h1>
       </div>
+
+      <WalletOverview v-if="auth.isAuthenticated"/>
     </div>
   </div>
 </template>
